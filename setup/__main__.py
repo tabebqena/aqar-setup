@@ -83,26 +83,23 @@ def parse_args():
         raise Exception(
             "wrong options, You can't use range --first | --last with --steps"
         )
-    conf = {}
+
     if args.conf:
+        conf = {}
         with open(args.conf, "r") as f:
             lines = f.readlines()
             for line in lines:
                 k, v = line.strip().split("=", 1)
                 conf[k] = v
-    # print(conf)
-    if not args.access:
-        args.access = conf["access"]
-    if not args.key:
-        args.key = conf["key"]
-    if not args.api_secret:
-        args.api_secret = conf["api_secret"]
+        if not args.access:
+            args.access = conf["access"]
+        if not args.key:
+            args.key = conf["key"]
+        if not args.api_secret:
+            args.api_secret = conf["api_secret"]
 
-    if not args.api_key:
-        args.api_key = conf["api_key"]
-
-    print(args)
-
+        if not args.api_key:
+            args.api_key = conf["api_key"]
     return args
 
 
@@ -261,10 +258,12 @@ if __name__ == "__main__":
         else:
             last = -1
         steps = _keys[first:last]
-        _commands = {s: commands_list[s] for s in steps if s not in args.exclude}
+        _commands = {s: commands_list[s]
+                     for s in steps if s not in args.exclude}
 
     elif args.steps:
-        _commands = {s: commands_list[s] for s in args.steps if s not in args.exclude}
+        _commands = {s: commands_list[s]
+                     for s in args.steps if s not in args.exclude}
 
     else:
         _commands = commands_list
