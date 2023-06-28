@@ -204,7 +204,7 @@ commands_list = {
         lambda caller: os.chdir(caller.project_dir),
         lambda caller: execute_shell(
             f"{caller.pip_path} uninstall -y shapely"),
-        "sudo apt install libgeos-dev",
+        "sudo apt install libgeos++-dev",
         lambda caller: execute_shell(
             f"{caller.pip_path} install --no-binary :all:  shapely"
         ),

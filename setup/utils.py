@@ -13,13 +13,10 @@ def __build_rekey(key):
 
 
 def resolve_text(command: Union[str, List[str]], ctx: dict):
-    print("resolve text", command)
     if isinstance(command, str):
         for k, v in ctx.items():
             built_key = __build_rekey(k)
-            print(built_key, v)
             command = re.sub(built_key, str(v), command)
-            print("after: ", command)
         return command
     elif isinstance(command, list):
         rv = []
