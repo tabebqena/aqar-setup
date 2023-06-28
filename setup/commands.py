@@ -70,7 +70,9 @@ class Command:
 
 class ShellCommand(Command):
     def resolve(self, caller):
-        return resolve_text(self.command, caller.context)
+        rv = resolve_text(self.command, caller.context)
+        print("resolved to:", rv)
+        return rv
 
 
 class CallableCommand(Command):
@@ -173,12 +175,12 @@ commands_list = {
 
         # install repo from git
         "echo install repo from git",
-        "echo clone the repo",
         # lambda caller: execute_shell(f"mkdir -p {caller.project_dir}"),
         lambda caller: os.chdir(caller.home_dir),
         lambda caller:
             ShellCommand(
-            f"git clone https://{{GITHUB_USERNAME}}:{{GITHUB_TOKEN}}@github.com/tabebqena/aqar.git {caller.project_dir}"
+            "git clone https://{{GITHUB_USERNAME}}:{{GITHUB_TOKEN}}@github.com/tabebqena/aqar.git" + \
+                " " + caller.project_dir
         )(caller),
     ],
     "env": [

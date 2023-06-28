@@ -123,7 +123,6 @@ class Up:
         self.api_key = api_key
         self.api_secret = api_secret
         self.access_token = access_token
-        print(access_token)
         self.current_dir = os.path.dirname(os.path.abspath(__file__))
         self._configs = None
         self._project_dir = None
@@ -166,7 +165,7 @@ class Up:
         if configs is not None:
             ctx.update(configs)
         ctx.update({"HOME_DIR": self.home_dir, "USER": self.user})
-        print("Context: ", ctx)
+        # print("Context: ", ctx)
         return ctx
 
     @property
