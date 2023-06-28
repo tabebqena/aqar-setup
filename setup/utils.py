@@ -148,21 +148,22 @@ def execute_shell(command: Union[str, list]):
 def create_postgres_user(caller):
     path = os.path.join(caller.current_dir, "create.sql")
     with open(path, "w") as f:
-        f.write(
-            f"""
+        txt = f"""
 #!/bin/sh
 
 psql -U postgres postgres <<OMG
  CREATE USER {caller.configs['DB_USER']} password '{caller.configs['DB_PASSWORD']}';
 OMG
 """
+        f.write(
+            txt
         )
-    # create user {} password \"{configs['DB_PASSWORD']}\""
-    # rv = execute_shell(f"sudo -u postgres psql --file {path}")
+        print(txt)
 
     os.chmod(path, stat.S_IEXEC)
+    print(f"sh {path}")
     rv = execute_shell(f"sh {path}")
-    os.remove(path)
+
     if rv.returncode > 0:
         text = rv.stderr or rv.stdout
 
@@ -171,6 +172,8 @@ OMG
         else:
             text = ""
         raise Exception(f"Error: {text}")
+    else:
+        os.remove(path)
 
 
 def write_env_file(caller):

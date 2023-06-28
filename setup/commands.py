@@ -170,11 +170,12 @@ commands_list = {
     ],
     "clone": [
         lambda caller: caller.configs,
+
         # install repo from git
         "echo install repo from git",
         "echo clone the repo",
         # lambda caller: execute_shell(f"mkdir -p {caller.project_dir}"),
-        # lambda caller: os.chdir(caller.project_dir),
+        lambda caller: os.chdir(caller.home_dir),
         ShellCommand(
             "git clone https://{{GITHUB_USERNAME}}:{{GITHUB_TOKEN}}@github.com/tabebqena/aqar.git"
         ),
