@@ -106,6 +106,7 @@ class ShellCommandList:
         self.stop_in_error = stop_in_error
 
     def __call__(self, caller=None, *args: Any, **kwds: Any) -> Any:
+        errors = []
         for command in self.commands_list:
             try:
                 ShellCommand(command, *args, **kwds)(caller)
@@ -113,7 +114,11 @@ class ShellCommandList:
                 if self.stop_in_error:
                     raise
                 else:
-                    traceback.print_exc()
+                    errors.append(e)  # traceback.print_exc()
+        if errors:
+            for error in errors:
+                print(traceback.format_exception(error))
+            confirm_proceed("", "Procees after this errors?")
 
 
 commands_list = {
@@ -141,7 +146,7 @@ commands_list = {
             [
                 f"sudo apt-get install -y {p}"
                 for p in (
-                    "zlib1g-dev build-essential libreadline-gplv2-dev libncursesw5-dev libssl-dev libsqlite3-dev tk-dev libgdbm-dev libc6-dev libbz2-dev  python-setuptools python-pip python-smbus openssl libffi-dev python3-venv zip python3-distutils  software-properties-common redis postgresql postgresql-contrib libssl-dev curl python3-dev libpq-dev nginx git python-is-python3 binutils libproj-dev gdal-bin postgresql postgresql-contrib postgresql-client redis-server supervisor"
+                    "zlib1g-dev build-essential libreadline-gplv2-dev libncursesw5-dev libssl-dev libsqlite3-dev tk-dev libgdbm-dev libc6-dev libbz2-dev  python-setuptools python-pip python-smbus openssl libffi-dev python3-venv zip python3-distutils  software-properties-common redis postgresql postgresql-contrib libssl-dev curl python3-dev libpq-dev nginx git python-is-python3 binutils libproj-dev gdal-bin postgresql postgresql-contrib postgresql-client redis-server supervisor  postgresql-client-common"
                 ).split()
             ],
         ),
