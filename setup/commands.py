@@ -6,7 +6,7 @@ import sys
 from typing import Any, List
 import traceback
 
-from .utils import (
+from setup.utils import (
     add_local_bin_path,
     create_postgres_user,
     install_poetry,
