@@ -178,7 +178,7 @@ commands_list = {
         lambda caller: os.chdir(caller.home_dir),
         lambda caller:
             ShellCommand(
-            f"git clone https://{{GITHUB_USERNAME}}:{{GITHUB_TOKEN}}@github.com/tabebqena/aqar.git {caller.home_dir}"
+            f"git clone https://{{GITHUB_USERNAME}}:{{GITHUB_TOKEN}}@github.com/tabebqena/aqar.git {caller.project_dir}"
         )(caller),
     ],
     "env": [
