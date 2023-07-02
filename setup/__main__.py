@@ -7,6 +7,8 @@ from typing import Any, Dict
 from .utils import execute_command, load_configs
 from .commands_list import commands_list
 
+step_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "step")
+
 
 def parse_args():
     parser = argparse.ArgumentParser(prog="Server Up")
@@ -233,8 +235,10 @@ class Up:
             print(f"Step: {s}")
             for cmd in cmd_list:
                 execute_command(cmd, self)
-            f = open("step", "w")
+            print("write step")
+            f = open(step_path, "w")
             f.write(s)
+            print(f.name)
             f.close()
 
 
@@ -245,7 +249,7 @@ if __name__ == "__main__":
     if args.list:
         for key in commands_list:
             print(key)
-        f = open("step", "r")
+        f = open(step_path, "r")
         print("Current step: ", f.read().strip())
         f.close()
         sys.exit(0)

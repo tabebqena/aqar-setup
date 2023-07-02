@@ -197,22 +197,24 @@ commands_list = {
         lambda caller: wait_for_user_action(
             "Go to /etc/nginx/nginx.conf & edit http { client_max_body_size 10M;  } or to another reasonable value, after this print enter"
         ),
+        Command(
+            ["sudo rm /etc/nginx/sites-enabled/aqar"],
+            [lambda caller: os.path.exists("/etc/nginx/sites-enabled/aqar")]
+        ),
         ShellCommand(
             "sudo ln -s /etc/nginx/sites-available/aqar /etc/nginx/sites-enabled/",
             stop_in_error=False,
         ),
         # backup default site
         ShellCommand(
-            "sudo mv /etc/nginx/sites-available/default /etc/nginx/sites-available/__default",
+            ["sudo mv /etc/nginx/sites-available/default /etc/nginx/sites-available/__default",
+             "sudo rm /etc/nginx/sites-enabled/default",],
             conditions=(
                 lambda caller: os.path.exists(
                     "/etc/nginx/sites-available/default"),
             )
 
         ),
-
-        # disble default site
-        "sudo rm /etc/nginx/sites-enabled/default",
         "sudo systemctl restart nginx",
         "echo check the nginx errors above, if there is errors, correct it first",
         "sudo nginx -t",
