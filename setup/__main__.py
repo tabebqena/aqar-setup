@@ -81,6 +81,12 @@ def parse_args():
         action="store_true",
     )
 
+    parser.add_argument(
+        "--list",
+        help="list all steps & print the current last step",
+        action="store_true",
+    )
+
     args = parser.parse_args(sys.argv[1:])
     if (args.first or args.last) and args.steps:
         raise Exception(
@@ -237,6 +243,13 @@ if __name__ == "__main__":
     # argv = sys.argv[1:]
     args = parse_args()
     print(args)
+    if args.list:
+        for key in commands_list:
+            print(key)
+        f = open("step", "r")
+        print(f.read().strip())
+        f.close()
+        sys.exit(0)
     if args.first or args.last:
         _keys = list(commands_list.keys())
 
@@ -249,10 +262,12 @@ if __name__ == "__main__":
         else:
             last = -1
         steps = _keys[first:last]
-        _commands = {s: commands_list[s] for s in steps if s not in args.exclude}
+        _commands = {s: commands_list[s]
+                     for s in steps if s not in args.exclude}
 
     elif args.steps:
-        _commands = {s: commands_list[s] for s in args.steps if s not in args.exclude}
+        _commands = {s: commands_list[s]
+                     for s in args.steps if s not in args.exclude}
 
     else:
         _commands = commands_list

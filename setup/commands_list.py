@@ -113,7 +113,6 @@ commands_list = {
         # execute_shell(f"mkdir -p {caller.project_dir}"),
         lambda caller: make_dir_if_not_exists(caller.project_dir),
         lambda caller: os.chdir(caller.project_dir),
-        "echo pwd",
         lambda caller: execute_shell(
             f"{caller.python_path} manage.py makemigrations",
         ),
