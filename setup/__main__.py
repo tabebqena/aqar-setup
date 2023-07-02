@@ -5,8 +5,8 @@ import os
 import sys
 from typing import Any, Dict
 
-from .utils import load_configs
-from .commands import (
+from .utils import execute_command, load_configs
+from .commands_list import (
     commands_list,
     Command,
     ShellCommand,
@@ -85,6 +85,7 @@ def parse_args():
         "-p",
         "--print",
         help="print commands only.",
+        action="store_true",
     )
 
     args = parser.parse_args(sys.argv[1:])
@@ -233,22 +234,7 @@ class Up:
             print(f"Step: {s}")
 
             for cmd in cmd_list:
-                try:
-                    if isinstance(cmd, str):
-                        cmd = Command(cmd)
-                        cmd(caller=self)
-                    if isinstance(cmd, list):
-                        cmd = ShellCommandList(*[Command(c) for c in cmd])
-                        cmd(caller=self)
-                    elif isinstance(cmd, Command):
-                        cmd(caller=self)
-                    elif isinstance(cmd, ShellCommandList):
-                        cmd(caller=self)
-
-                    elif isfunction(cmd):
-                        cmd(caller=self)
-                except Exception as e:
-                    raise e
+                execute_command(cmd, self)
             f = open("step", "w")
             f.write(s)
             f.close()
@@ -270,12 +256,10 @@ if __name__ == "__main__":
         else:
             last = -1
         steps = _keys[first:last]
-        _commands = {s: commands_list[s]
-                     for s in steps if s not in args.exclude}
+        _commands = {s: commands_list[s] for s in steps if s not in args.exclude}
 
     elif args.steps:
-        _commands = {s: commands_list[s]
-                     for s in args.steps if s not in args.exclude}
+        _commands = {s: commands_list[s] for s in args.steps if s not in args.exclude}
 
     else:
         _commands = commands_list
@@ -284,7 +268,7 @@ if __name__ == "__main__":
         for step, commands in _commands.items():
             print("Step:", step)
             for command in commands:
-                print(" "*4, command)
+                print(" " * 4, command)
             print("\n")
         sys.exit(0)
 

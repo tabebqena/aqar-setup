@@ -5,6 +5,7 @@ import subprocess
 import sys
 from typing import Any, List
 import traceback
+from .base_classes import ShellCommandList, Command, ShellCommand
 
 from setup.utils import (
     add_local_bin_path,
@@ -16,109 +17,10 @@ from setup.utils import (
     execute_shell,
     write_env_file,
     confirm_proceed,
+    user_choice,
     make_dir_if_not_exists,
     wait_for_user_action,
 )
-
-
-class CtxVar:
-    def __init__(
-        self,
-        name,
-        is_callable=False,
-    ):
-        self.name = name
-        self.iscallable = is_callable
-
-    def resolve(self, module):
-        val = getattr(module, self.name)
-        if self.iscallable:
-            val = val()
-        return val
-
-
-class Command:
-    def __init__(self, command, stop_in_error=True, *args, **kwargs) -> None:
-        self.command = command
-        self.stop_in_error = stop_in_error
-        self.args = args
-        self.kwargs = kwargs
-
-    def resolve(self, caller):
-        return self.command
-
-    def __call__(self, caller=None):
-        cmd = self.resolve(caller)
-        try:
-            if isinstance(cmd, str):
-                rv = execute_shell(cmd)
-                if rv.returncode != 0:
-                    print("Error Command: ", cmd)
-                    print(rv.stdout)
-                    print(rv.stderr)
-                    if self.stop_in_error:
-                        raise Exception(
-                            f"The last command {cmd} end with error")
-
-            elif isfunction(cmd):
-                cmd(*self.args, **self.kwargs)
-            else:
-                raise Exception(f"can't understand command {cmd}")
-        except Exception as e:
-            raise Exception(f"Error in {cmd}") from e
-
-
-class ShellCommand(Command):
-    def resolve(self, caller):
-        rv = resolve_text(self.command, caller.context)
-        print("resolved to:", rv)
-        return rv
-
-
-class CallableCommand(Command):
-    def __init__(self, command: str, from_instance=False, *args, **kwargs) -> None:
-        self.command = command
-        self.args = args
-        self.kwargs = kwargs
-
-    def resolve(self, caller):
-        if isfunction(self.command):
-            return self.command
-
-        else:
-            parts = self.command.split(".")
-            mod_name, name = ".".join(parts[:-1]), parts[-1]
-            module = importlib.import_module(mod_name)
-            if module:
-                var = getattr(module, name)
-                if var:
-                    return var
-        raise Exception(f"can't import {name} from {mod_name} : {module}")
-
-
-class ShellCommandList:
-    def __init__(
-        self,
-        stop_in_error=False,
-        commands_list=[],
-    ):
-        self.commands_list: List[str] = commands_list
-        self.stop_in_error = stop_in_error
-
-    def __call__(self, caller=None, *args: Any, **kwds: Any) -> Any:
-        errors = []
-        for command in self.commands_list:
-            try:
-                ShellCommand(command, *args, **kwds)(caller)
-            except Exception as e:
-                if self.stop_in_error:
-                    raise
-                else:
-                    errors.append(e)  # traceback.print_exc()
-        if errors:
-            for error in errors:
-                print(traceback.format_exception(error))
-            confirm_proceed("", "Procees after this errors?")
 
 
 commands_list = {
@@ -177,15 +79,14 @@ commands_list = {
     ],
     "clone": [
         lambda caller: caller.configs,
-
         # install repo from git
         "echo install repo from git",
         # lambda caller: execute_shell(f"mkdir -p {caller.project_dir}"),
         lambda caller: os.chdir(caller.home_dir),
-        lambda caller:
-            ShellCommand(
-            "git clone https://{{GITHUB_USERNAME}}:{{GITHUB_TOKEN}}@github.com/tabebqena/aqar.git" + \
-                " " + caller.project_dir
+        lambda caller: ShellCommand(
+            "git clone https://{{GITHUB_USERNAME}}:{{GITHUB_TOKEN}}@github.com/tabebqena/aqar.git"
+            + " "
+            + caller.project_dir
         )(caller),
     ],
     "env": [
@@ -199,16 +100,14 @@ commands_list = {
         lambda caller: execute_shell(f"mkdir -p {caller.project_dir}"),
         lambda caller: os.chdir(caller.project_dir),
         lambda caller: f"{caller.python_path} -m venv {caller.venv_path}",
-        lambda caller: shell_source(os.path.join(
-            caller.venv_path, "bin/activate")),
+        lambda caller: shell_source(os.path.join(caller.venv_path, "bin/activate")),
         "poetry install",
     ],
     "shapely": [
         lambda caller: caller.configs,
         lambda caller: execute_shell(f"mkdir -p {caller.project_dir}"),
         lambda caller: os.chdir(caller.project_dir),
-        lambda caller: execute_shell(
-            f"{caller.pip_path} uninstall -y shapely"),
+        lambda caller: execute_shell(f"{caller.pip_path} uninstall -y shapely"),
         "sudo apt install -y libgeos++-dev",
         lambda caller: execute_shell(
             f"{caller.pip_path} install --no-binary :all:  shapely"
@@ -216,7 +115,8 @@ commands_list = {
     ],
     "django": [
         lambda caller: caller.configs,
-        lambda caller: execute_shell(f"mkdir -p {caller.project_dir}"),
+        # execute_shell(f"mkdir -p {caller.project_dir}"),
+        lambda caller: make_dir_if_not_exists(caller.project_dir),
         lambda caller: os.chdir(caller.project_dir),
         lambda caller: execute_shell(
             f"{caller.python_path} manage.py makemigrations",
@@ -224,13 +124,32 @@ commands_list = {
         lambda caller: f"{caller.python_path} manage.py migrate",
         lambda caller: f"{caller.python_path} manage.py collectstatic",
         # create superuser
-        "python manage.py loaddata users",
+        lambda caller: user_choice(
+            "python manage.py loaddata users",
+            caller,
+            "if you enter y or Y, the users fixture will be loaded, This may change your users table",
+        ),
         # load necessary fixtures
-        "python manage.py loaddata saudia",
-        "python manage.py loaddata region",
-        "python manage.py loaddata governorate",
-        "python manage.py loaddata fixtures/sites.json",
-
+        lambda caller: user_choice(
+            "python manage.py loaddata saudia",
+            caller,
+            "if you enter y or Y, the saudia fixture will be loaded, This may change your country table",
+        ),
+        lambda caller: user_choice(
+            "python manage.py loaddata region",
+            caller,
+            "if you enter y or Y, the region fixture will be loaded, This may change your region table",
+        ),
+        lambda caller: user_choice(
+            "python manage.py loaddata governorate",
+            caller,
+            "if you enter y or Y, the governorate fixture will be loaded, This may change your governorate table",
+        ),
+        lambda caller: user_choice(
+            "python manage.py loaddata fixtures/sites.json",
+            caller,
+            "if you enter y or Y, the sites fixture will be loaded, This may change your sites table",
+        ),
     ],
     "gunicorn": [
         # gunicorn
@@ -317,16 +236,14 @@ commands_list = {
         lambda caller: confirm_proceed("redis"),
         "echo check redis port: sudo netstat -lnp | grep redis",
         "sudo systemctl restart redis.service",
-        lambda caller: confirm_proceed(
-            "redis", "Check if the redis port is 6379"),
+        lambda caller: confirm_proceed("redis", "Check if the redis port is 6379"),
     ],
     "daphne": [
         lambda caller: caller.configs,
         lambda caller: execute_shell(f"mkdir -p {caller.project_dir}"),
         lambda caller: os.chdir(caller.project_dir),
         lambda caller: resolve_template_file(
-            os.path.join(caller.project_dir,
-                         "config/daphne/daphne.service.template"),
+            os.path.join(caller.project_dir, "config/daphne/daphne.service.template"),
             caller.context,
         ),
         lambda caller: execute_shell(
@@ -335,8 +252,7 @@ commands_list = {
         "sudo systemctl daemon-reload",
         "sudo systemctl start daphne.service",
         # "sudo systemctl status daphne.service",
-        lambda caller: confirm_proceed(
-            "daphne", "Check the dapne service status"),
+        lambda caller: confirm_proceed("daphne", "Check the dapne service status"),
         "sudo systemctl daemon-reload",
         "sudo systemctl start daphne.service",
         # Make it run on reboot

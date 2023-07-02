@@ -1,3 +1,4 @@
+from inspect import isfunction
 import json
 import os
 import stat
@@ -6,6 +7,7 @@ import sys
 from typing import Union, List
 import re
 from cryptography.fernet import Fernet
+from .base_classes import Command, ShellCommand, ShellCommandList, CallableCommand
 
 
 def __build_rekey(key):
@@ -26,8 +28,7 @@ def resolve_text(command: Union[str, List[str]], ctx: dict):
             rv.append(part)
         return rv
     else:
-        raise RuntimeError(
-            "{0} is not string nor list of strings".format(command))
+        raise RuntimeError("{0} is not string nor list of strings".format(command))
 
 
 def resolve_template_file(input_path, ctx: dict):
@@ -64,8 +65,7 @@ def install_poetry():
 def shell_source(script):
     """Sometime you want to emulate the action of "source" in bash,
     settings some environment variables. Here is a way to do it."""
-    pipe = subprocess.Popen(". %s; env" %
-                            script, stdout=subprocess.PIPE, shell=True)
+    pipe = subprocess.Popen(". %s; env" % script, stdout=subprocess.PIPE, shell=True)
     output = bytes.decode(pipe.communicate()[0])
     env = {}
     env = dict((line.split("=", 1) for line in output.splitlines()))
@@ -83,8 +83,7 @@ def _download(
     import dropbox
 
     dbx = dropbox.Dropbox(
-        oauth2_access_token=access_token or input(
-            "Enter dropbox access token: "),
+        oauth2_access_token=access_token or input("Enter dropbox access token: "),
         app_key=api_key or input("Enter dropbox API key: "),
         app_secret=api_secret or input("Enter dropbox API Secret: "),
     )
@@ -156,9 +155,7 @@ psql -U postgres postgres <<OMG
  CREATE USER {caller.configs['DB_USER']} password '{caller.configs['DB_PASSWORD']}';
 OMG
 """
-        f.write(
-            txt
-        )
+        f.write(txt)
         print(txt)
 
     os.chmod(path, stat.S_IEXEC)
@@ -201,6 +198,17 @@ def confirm_proceed(index, message=""):
         sys.exit("aborted by user\n")
 
 
+def user_choice(command, caller, message=""):
+    if message:
+        print(message)
+    p = input("Proceed? \ntype 'Y' or 'y' to proceed, any other key to abort: ")
+    if p.lower() != "y":
+        print("aborted by user")
+        return
+    else:
+        return execute_command(command, caller)
+
+
 def wait_for_user_action(message):
     print(message)
     print(
@@ -209,3 +217,25 @@ def wait_for_user_action(message):
     input(
         "\nWait for your action, After finishing the following instructions, press ENTER"
     )
+
+
+def execute_command(cmd, caller):
+    try:
+        if isinstance(cmd, str):
+            cmd = Command(cmd)
+            cmd(caller=caller)
+
+        if isinstance(cmd, list):
+            cmd = ShellCommandList(*[Command(c) for c in cmd])
+            cmd(caller=caller)
+
+        elif isinstance(cmd, Command):
+            cmd(caller=caller)
+
+        elif isinstance(cmd, ShellCommandList):
+            cmd(caller=caller)
+
+        elif isfunction(cmd):
+            cmd(caller=caller)
+    except Exception as e:
+        raise e
