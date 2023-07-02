@@ -185,7 +185,9 @@ commands_list = {
     "nginx": [
         "echo make nginx dir",
         lambda caller: caller.configs,
-        lambda caller: execute_shell(f"mkdir -p {caller.project_dir}"),
+        lambda caller: make_dir_if_not_exists(caller.project_dir),
+        lambda caller: make_dir_if_not_exists(
+            os.path.join(caller.home_dir, "logs")),
         lambda caller: os.chdir(caller.project_dir),
         lambda caller: make_dir_if_not_exists("/etc/nginx/sites-available/"),
         lambda caller: resolve_template_file(
@@ -214,6 +216,12 @@ commands_list = {
                     "/etc/nginx/sites-available/default"),
             )
 
+        ),
+        lambda caller: Command(
+            [
+                f"sudo chmod 755 {os.path.join(caller.project_dir, 'static')}",
+                f"sudo chmod 755 {os.path.join(caller.project_dir, 'media')}",
+            ]
         ),
         "sudo systemctl restart nginx",
         "echo check the nginx errors above, if there is errors, correct it first",
