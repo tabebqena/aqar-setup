@@ -146,7 +146,7 @@ commands_list = {
             [
                 f"sudo apt-get install -y {p}"
                 for p in (
-                    "zlib1g-dev build-essential libreadline-gplv2-dev libncursesw5-dev libssl-dev libsqlite3-dev tk-dev libgdbm-dev libc6-dev libbz2-dev  python-setuptools python-pip python-smbus openssl libffi-dev python3-venv zip python3-distutils  software-properties-common redis postgresql postgresql-contrib libssl-dev curl python3-dev libpq-dev nginx git python-is-python3 binutils libproj-dev gdal-bin postgresql postgresql-contrib postgresql-client redis-server supervisor  postgresql-client-common"
+                    "zlib1g-dev build-essential libreadline-gplv2-dev libncursesw5-dev libssl-dev libsqlite3-dev tk-dev libgdbm-dev libc6-dev libbz2-dev  python-setuptools python-pip python-smbus openssl libffi-dev python3-venv zip python3-distutils  software-properties-common redis postgresql postgresql-contrib libssl-dev curl python3-dev libpq-dev nginx nginx-common nginx-core git python-is-python3 binutils libproj-dev gdal-bin postgresql postgresql-contrib postgresql-client redis-server supervisor postgis postgresql-14-postgis-scripts postgresql-client-common"
                 ).split()
             ],
         ),
@@ -209,7 +209,7 @@ commands_list = {
         lambda caller: os.chdir(caller.project_dir),
         lambda caller: execute_shell(
             f"{caller.pip_path} uninstall -y shapely"),
-        "sudo apt install libgeos++-dev",
+        "sudo apt install -y libgeos++-dev",
         lambda caller: execute_shell(
             f"{caller.pip_path} install --no-binary :all:  shapely"
         ),
@@ -223,6 +223,14 @@ commands_list = {
         ),
         lambda caller: f"{caller.python_path} manage.py migrate",
         lambda caller: f"{caller.python_path} manage.py collectstatic",
+        # create superuser
+        "python manage.py loaddata users",
+        # load necessary fixtures
+        "python manage.py loaddata saudia",
+        "python manage.py loaddata region",
+        "python manage.py loaddata governorate",
+        "python manage.py loaddata fixtures/sites.json",
+
     ],
     "gunicorn": [
         # gunicorn
@@ -260,6 +268,7 @@ commands_list = {
         lambda caller: confirm_proceed("run_gunicorn"),
         "sudo systemctl daemon-reload",
     ],
+    # todo chowner of static files
     "nginx": [
         "echo make nginx dir",
         lambda caller: caller.configs,
@@ -279,6 +288,10 @@ commands_list = {
             "sudo ln -s /etc/nginx/sites-available/aqar /etc/nginx/sites-enabled/",
             stop_in_error=False,
         ),
+        # backup default site
+        "sudo mv /etc/nginx/sites-available/default /etc/nginx/sites-available/__default",
+        # disble default site
+        "sudo rm /etc/nginx/sites-enabled/default",
         "sudo systemctl restart nginx",
         "echo check the nginx errors above, if there is errors, correct it first",
         "sudo nginx -t",

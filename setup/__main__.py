@@ -28,6 +28,9 @@ def parse_args():
     parser.add_argument(
         "-x", "--exclude", nargs="*", help="steps to be excluded", default=[]
     )
+    # parser.add_argument(
+    #     "-xx", "--exclude_command", nargs="*", help="commands to be excluded", default=[]
+    # )
 
     parser.add_argument(
         "-f",
@@ -76,6 +79,12 @@ def parse_args():
     parser.add_argument(
         "--conf",
         help="configuration file path, file that contains access_token, api_key, api_secret and key",
+    )
+
+    parser.add_argument(
+        "-p",
+        "--print",
+        help="print commands only.",
     )
 
     args = parser.parse_args(sys.argv[1:])
@@ -222,6 +231,7 @@ class Up:
     def run(self):
         for s, cmd_list in self.commands.items():
             print(f"Step: {s}")
+
             for cmd in cmd_list:
                 try:
                     if isinstance(cmd, str):
@@ -239,6 +249,9 @@ class Up:
                         cmd(caller=self)
                 except Exception as e:
                     raise e
+            f = open("step", "w")
+            f.write(s)
+            f.close()
 
 
 if __name__ == "__main__":
@@ -266,6 +279,14 @@ if __name__ == "__main__":
 
     else:
         _commands = commands_list
+
+    if args.print:
+        for step, commands in _commands.items():
+            print("Step:", step)
+            for command in commands:
+                print(" "*4, command)
+            print("\n")
+        sys.exit(0)
 
     print(list(_commands.keys()))
 
