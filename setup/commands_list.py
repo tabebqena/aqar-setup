@@ -1,5 +1,5 @@
 import os
-from .base_classes import ShellCommandList, ShellCommand
+from .base_classes import Command,  ShellCommand
 
 from setup.utils import (
     add_local_bin_path,
@@ -36,14 +36,14 @@ commands_list = {
     "sys_install": [
         lambda caller: os.chdir(caller.home_dir),
         "echo install system packages",
-        ShellCommandList(
-            False,
+        Command(
             [
                 f"sudo apt-get install -y {p}"
                 for p in (
                     "zlib1g-dev build-essential libreadline-gplv2-dev libncursesw5-dev libssl-dev libsqlite3-dev tk-dev libgdbm-dev libc6-dev libbz2-dev  python-setuptools python-pip python-smbus openssl libffi-dev python3-venv zip python3-distutils  software-properties-common redis postgresql postgresql-contrib libssl-dev curl python3-dev libpq-dev nginx nginx-common nginx-core git python-is-python3 binutils libproj-dev gdal-bin postgresql postgresql-contrib postgresql-client redis-server supervisor postgis postgresql-14-postgis-scripts postgresql-client-common"
                 ).split()
             ],
+            stop_in_error=False
         ),
         "echo packages installed successfully!",
     ],
@@ -167,7 +167,7 @@ commands_list = {
             ),
             caller.context,
         ),
-        f"echo move '/config/gunicorn/gunicorn.service.template' & socket tp /etc/systemd/system",
+        f"echo move '/config/gunicorn/gunicorn.service' & socket tp /etc/systemd/system",
         lambda caller: execute_shell(
             f"sudo cp {os.path.join( caller.project_dir,'config/gunicorn/gunicorn.socket')}  /etc/systemd/system/gunicorn.socket"
         ),
@@ -177,8 +177,7 @@ commands_list = {
         "echo run gunicorn",
         "sudo systemctl start gunicorn",
         "sudo systemctl enable gunicorn",
-        "echo chech the gunicorn status for errors, if present: abort & type: sudo journalctl -u gunicorn.socket"
-        "sudo systemctl status gunicorn.socket",
+        "echo chech the gunicorn status for errors, if present: abort & type: sudo journalctl -u gunicorn.socket & sudo systemctl status gunicorn.socket",
         lambda caller: confirm_proceed("run_gunicorn"),
         "sudo systemctl daemon-reload",
     ],
@@ -203,7 +202,15 @@ commands_list = {
             stop_in_error=False,
         ),
         # backup default site
-        "sudo mv /etc/nginx/sites-available/default /etc/nginx/sites-available/__default",
+        ShellCommand(
+            "sudo mv /etc/nginx/sites-available/default /etc/nginx/sites-available/__default",
+            conditions=(
+                lambda caller: os.path.exists(
+                    "/etc/nginx/sites-available/default"),
+            )
+
+        ),
+
         # disble default site
         "sudo rm /etc/nginx/sites-enabled/default",
         "sudo systemctl restart nginx",
