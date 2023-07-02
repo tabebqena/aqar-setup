@@ -1,6 +1,5 @@
 import argparse
 import getpass
-from inspect import isfunction
 import os
 import sys
 from typing import Any, Dict
@@ -250,12 +249,10 @@ if __name__ == "__main__":
         else:
             last = -1
         steps = _keys[first:last]
-        _commands = {s: commands_list[s]
-                     for s in steps if s not in args.exclude}
+        _commands = {s: commands_list[s] for s in steps if s not in args.exclude}
 
     elif args.steps:
-        _commands = {s: commands_list[s]
-                     for s in args.steps if s not in args.exclude}
+        _commands = {s: commands_list[s] for s in args.steps if s not in args.exclude}
 
     else:
         _commands = commands_list

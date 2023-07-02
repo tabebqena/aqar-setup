@@ -1,8 +1,5 @@
 import importlib
 from inspect import isfunction
-import os
-import subprocess
-import sys
 from typing import Any, List
 import traceback
 
@@ -33,8 +30,7 @@ class Command:
                     print(rv.stdout)
                     print(rv.stderr)
                     if self.stop_in_error:
-                        raise Exception(
-                            f"The last command {cmd} end with error")
+                        raise Exception(f"The last command {cmd} end with error")
 
             elif isfunction(cmd):
                 cmd(*self.args, **self.kwargs)

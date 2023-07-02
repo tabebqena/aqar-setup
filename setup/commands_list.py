@@ -1,11 +1,5 @@
-import importlib
-from inspect import isfunction
 import os
-import subprocess
-import sys
-from typing import Any, List
-import traceback
-from .base_classes import ShellCommandList, Command, ShellCommand
+from .base_classes import ShellCommandList, ShellCommand
 
 from setup.utils import (
     add_local_bin_path,
@@ -99,16 +93,14 @@ commands_list = {
         lambda caller: execute_shell(f"mkdir -p {caller.project_dir}"),
         lambda caller: os.chdir(caller.project_dir),
         lambda caller: f"{caller.python_path} -m venv {caller.venv_path}",
-        lambda caller: shell_source(os.path.join(
-            caller.venv_path, "bin/activate")),
+        lambda caller: shell_source(os.path.join(caller.venv_path, "bin/activate")),
         "poetry install",
     ],
     "shapely": [
         lambda caller: caller.configs,
         lambda caller: execute_shell(f"mkdir -p {caller.project_dir}"),
         lambda caller: os.chdir(caller.project_dir),
-        lambda caller: execute_shell(
-            f"{caller.pip_path} uninstall -y shapely"),
+        lambda caller: execute_shell(f"{caller.pip_path} uninstall -y shapely"),
         "sudo apt install -y libgeos++-dev",
         lambda caller: execute_shell(
             f"{caller.pip_path} install --no-binary :all:  shapely"
@@ -237,16 +229,14 @@ commands_list = {
         lambda caller: confirm_proceed("redis"),
         "echo check redis port: sudo netstat -lnp | grep redis",
         "sudo systemctl restart redis.service",
-        lambda caller: confirm_proceed(
-            "redis", "Check if the redis port is 6379"),
+        lambda caller: confirm_proceed("redis", "Check if the redis port is 6379"),
     ],
     "daphne": [
         lambda caller: caller.configs,
         lambda caller: execute_shell(f"mkdir -p {caller.project_dir}"),
         lambda caller: os.chdir(caller.project_dir),
         lambda caller: resolve_template_file(
-            os.path.join(caller.project_dir,
-                         "config/daphne/daphne.service.template"),
+            os.path.join(caller.project_dir, "config/daphne/daphne.service.template"),
             caller.context,
         ),
         lambda caller: execute_shell(
@@ -255,8 +245,7 @@ commands_list = {
         "sudo systemctl daemon-reload",
         "sudo systemctl start daphne.service",
         # "sudo systemctl status daphne.service",
-        lambda caller: confirm_proceed(
-            "daphne", "Check the dapne service status"),
+        lambda caller: confirm_proceed("daphne", "Check the dapne service status"),
         "sudo systemctl daemon-reload",
         "sudo systemctl start daphne.service",
         # Make it run on reboot

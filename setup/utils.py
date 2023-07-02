@@ -27,8 +27,7 @@ def resolve_text(command: Union[str, List[str]], ctx: dict):
             rv.append(part)
         return rv
     else:
-        raise RuntimeError(
-            "{0} is not string nor list of strings".format(command))
+        raise RuntimeError("{0} is not string nor list of strings".format(command))
 
 
 def resolve_template_file(input_path, ctx: dict):
@@ -65,8 +64,7 @@ def install_poetry():
 def shell_source(script):
     """Sometime you want to emulate the action of "source" in bash,
     settings some environment variables. Here is a way to do it."""
-    pipe = subprocess.Popen(". %s; env" %
-                            script, stdout=subprocess.PIPE, shell=True)
+    pipe = subprocess.Popen(". %s; env" % script, stdout=subprocess.PIPE, shell=True)
     output = bytes.decode(pipe.communicate()[0])
     env = {}
     env = dict((line.split("=", 1) for line in output.splitlines()))
@@ -84,8 +82,7 @@ def _download(
     import dropbox
 
     dbx = dropbox.Dropbox(
-        oauth2_access_token=access_token or input(
-            "Enter dropbox access token: "),
+        oauth2_access_token=access_token or input("Enter dropbox access token: "),
         app_key=api_key or input("Enter dropbox API key: "),
         app_secret=api_secret or input("Enter dropbox API Secret: "),
     )
@@ -222,7 +219,7 @@ def wait_for_user_action(message):
 
 
 def execute_command(cmd, caller):
-    from .base_classes import Command,  ShellCommandList
+    from .base_classes import Command, ShellCommandList
 
     try:
         if isinstance(cmd, str):
