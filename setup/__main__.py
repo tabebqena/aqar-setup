@@ -231,7 +231,6 @@ class Up:
     def run(self):
         for s, cmd_list in self.commands.items():
             print(f"Step: {s}")
-
             for cmd in cmd_list:
                 execute_command(cmd, self)
             f = open("step", "w")
@@ -247,7 +246,7 @@ if __name__ == "__main__":
         for key in commands_list:
             print(key)
         f = open("step", "r")
-        print(f.read().strip())
+        print("Current step: ", f.read().strip())
         f.close()
         sys.exit(0)
     if args.first or args.last:
