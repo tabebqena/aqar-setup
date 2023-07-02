@@ -93,14 +93,16 @@ commands_list = {
         lambda caller: execute_shell(f"mkdir -p {caller.project_dir}"),
         lambda caller: os.chdir(caller.project_dir),
         lambda caller: f"{caller.python_path} -m venv {caller.venv_path}",
-        lambda caller: shell_source(os.path.join(caller.venv_path, "bin/activate")),
+        lambda caller: shell_source(os.path.join(
+            caller.venv_path, "bin/activate")),
         "poetry install",
     ],
     "shapely": [
         lambda caller: caller.configs,
         lambda caller: execute_shell(f"mkdir -p {caller.project_dir}"),
         lambda caller: os.chdir(caller.project_dir),
-        lambda caller: execute_shell(f"{caller.pip_path} uninstall -y shapely"),
+        lambda caller: execute_shell(
+            f"{caller.pip_path} uninstall -y shapely"),
         "sudo apt install -y libgeos++-dev",
         lambda caller: execute_shell(
             f"{caller.pip_path} install --no-binary :all:  shapely"
@@ -111,6 +113,7 @@ commands_list = {
         # execute_shell(f"mkdir -p {caller.project_dir}"),
         lambda caller: make_dir_if_not_exists(caller.project_dir),
         lambda caller: os.chdir(caller.project_dir),
+        "echo pwd",
         lambda caller: execute_shell(
             f"{caller.python_path} manage.py makemigrations",
         ),
@@ -118,28 +121,28 @@ commands_list = {
         lambda caller: f"{caller.python_path} manage.py collectstatic",
         # create superuser
         lambda caller: user_choice(
-            "python manage.py loaddata users",
+            f"{caller.python_path} manage.py loaddata users",
             caller,
             "if you enter y or Y, the users fixture will be loaded, This may change your users table",
         ),
         # load necessary fixtures
         lambda caller: user_choice(
-            "python manage.py loaddata saudia",
+            f"{caller.python_path} manage.py loaddata saudia",
             caller,
             "if you enter y or Y, the saudia fixture will be loaded, This may change your country table",
         ),
         lambda caller: user_choice(
-            "python manage.py loaddata region",
+            f"{caller.python_path} manage.py loaddata region",
             caller,
             "if you enter y or Y, the region fixture will be loaded, This may change your region table",
         ),
         lambda caller: user_choice(
-            "python manage.py loaddata governorate",
+            f"{caller.python_path} manage.py loaddata governorate",
             caller,
             "if you enter y or Y, the governorate fixture will be loaded, This may change your governorate table",
         ),
         lambda caller: user_choice(
-            "python manage.py loaddata fixtures/sites.json",
+            f"{caller.python_path} manage.py loaddata fixtures/sites.json",
             caller,
             "if you enter y or Y, the sites fixture will be loaded, This may change your sites table",
         ),
@@ -229,14 +232,16 @@ commands_list = {
         lambda caller: confirm_proceed("redis"),
         "echo check redis port: sudo netstat -lnp | grep redis",
         "sudo systemctl restart redis.service",
-        lambda caller: confirm_proceed("redis", "Check if the redis port is 6379"),
+        lambda caller: confirm_proceed(
+            "redis", "Check if the redis port is 6379"),
     ],
     "daphne": [
         lambda caller: caller.configs,
         lambda caller: execute_shell(f"mkdir -p {caller.project_dir}"),
         lambda caller: os.chdir(caller.project_dir),
         lambda caller: resolve_template_file(
-            os.path.join(caller.project_dir, "config/daphne/daphne.service.template"),
+            os.path.join(caller.project_dir,
+                         "config/daphne/daphne.service.template"),
             caller.context,
         ),
         lambda caller: execute_shell(
@@ -245,7 +250,8 @@ commands_list = {
         "sudo systemctl daemon-reload",
         "sudo systemctl start daphne.service",
         # "sudo systemctl status daphne.service",
-        lambda caller: confirm_proceed("daphne", "Check the dapne service status"),
+        lambda caller: confirm_proceed(
+            "daphne", "Check the dapne service status"),
         "sudo systemctl daemon-reload",
         "sudo systemctl start daphne.service",
         # Make it run on reboot
