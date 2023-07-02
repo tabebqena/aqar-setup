@@ -6,19 +6,10 @@ import sys
 from typing import Any, List
 import traceback
 
-from setup.utils import (
-    add_local_bin_path,
-    create_postgres_user,
-    install_poetry,
-    resolve_template_file,
+from .utils import (
     resolve_text,
-    shell_source,
     execute_shell,
-    write_env_file,
     confirm_proceed,
-    ask_user,
-    make_dir_if_not_exists,
-    wait_for_user_action,
 )
 
 
@@ -42,7 +33,8 @@ class Command:
                     print(rv.stdout)
                     print(rv.stderr)
                     if self.stop_in_error:
-                        raise Exception(f"The last command {cmd} end with error")
+                        raise Exception(
+                            f"The last command {cmd} end with error")
 
             elif isfunction(cmd):
                 cmd(*self.args, **self.kwargs)

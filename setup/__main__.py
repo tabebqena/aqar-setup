@@ -6,13 +6,7 @@ import sys
 from typing import Any, Dict
 
 from .utils import execute_command, load_configs
-from .commands_list import (
-    commands_list,
-    Command,
-    ShellCommand,
-    CallableCommand,
-    ShellCommandList,
-)
+from .commands_list import commands_list
 
 
 def parse_args():
@@ -256,10 +250,12 @@ if __name__ == "__main__":
         else:
             last = -1
         steps = _keys[first:last]
-        _commands = {s: commands_list[s] for s in steps if s not in args.exclude}
+        _commands = {s: commands_list[s]
+                     for s in steps if s not in args.exclude}
 
     elif args.steps:
-        _commands = {s: commands_list[s] for s in args.steps if s not in args.exclude}
+        _commands = {s: commands_list[s]
+                     for s in args.steps if s not in args.exclude}
 
     else:
         _commands = commands_list
