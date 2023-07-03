@@ -303,7 +303,7 @@ class confirm_proceed(Command):
         self.message = message
         self.index = index
 
-    def __call__(self,):
+    def __call__(self, caller):
         index = self.index
         message = self.message
         if message:

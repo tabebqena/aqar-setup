@@ -163,7 +163,7 @@ commands_list = {
         confirm_proceed(
             "gunicorn", "add the port 8000 to the allowed ports of the instance in the amazon console"),
         lambda caller: execute_shell(
-            f"{os.path.join( caller.project_dir,'.venv','bin', 'gunicorn')}, --bind 0.0.0.0:8000 aqar.wsgi"
+            f"{os.path.join( caller.project_dir,'.venv','bin', 'gunicorn')}, --bind 0.0.0.0:8000 aqar.wsgi &"
         ),
         confirm_proceed(
             "gunicorn", "Point your browser to IP:8000, you should see the application served"),
