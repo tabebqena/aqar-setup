@@ -192,13 +192,27 @@ def make_dir_if_not_exists(path):
     execute_shell(f"sudo mkdir -pv {path}")
 
 
-def confirm_proceed(index, message=""):
-    if message:
-        print(message)
-    p = input("Proceed? \ntype 'Y' or 'y' to proceed, any other key to abort: ")
-    if p.lower() != "y":
-        print(f"next time, you can type up {index} to start from this step")
-        sys.exit("aborted by user\n")
+class BaseCallable:
+    def __call__(self, *args, **kwargs):
+        ...
+
+
+class confirm_proceed(BaseCallable):
+    def __init__(self, index, message="") -> None:
+        self.message = message
+        self.__call__(index, self.message)
+
+    def __call__(self, index, message=""):
+        if message:
+            print(message)
+        p = input("Proceed? \ntype 'Y' or 'y' to proceed, any other key to abort: ")
+        if p.lower() != "y":
+            print(
+                f"next time, you can type up {index} to start from this step")
+            sys.exit("aborted by user\n")
+
+    def __repr__(self) -> str:
+        return f"<Confirm proceed of {self.message}>"
 
 
 def user_choice(command, caller, message=""):
@@ -253,6 +267,9 @@ def execute_command(cmd, caller, stop_on_error=False):
                 confirm_proceed("", "Procees after this errors?")
 
         elif callable(cmd):
-            return cmd(caller=caller)
+            if isinstance(cmd, BaseCallable):
+                return cmd
+            else:
+                return cmd(caller=caller)
     except Exception as e:
         raise e
