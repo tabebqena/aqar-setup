@@ -152,14 +152,14 @@ commands_list = {
         lambda caller: caller.configs,
         lambda caller: execute_shell(f"mkdir -p {caller.project_dir}"),
         lambda caller: os.chdir(caller.project_dir),
-        lambda caller: make_dir_if_not_exists("/var/log/gunicorn/"),
-        lambda caller: make_dir_if_not_exists("/var/run/gunicorn/"),
-        lambda caller: execute_shell(
-            f"sudo chown -cR {caller.user} /var/log/gunicorn/"
-        ),
-        lambda caller: execute_shell(
-            f"sudo chown -cR {caller.user} /var/run/gunicorn/"
-        ),
+        # lambda caller: make_dir_if_not_exists("/var/log/gunicorn/"),
+        # lambda caller: make_dir_if_not_exists("/var/run/gunicorn/"),
+        # lambda caller: execute_shell(
+        #     f"sudo chown -cR {caller.user} /var/log/gunicorn/"
+        # ),
+        # lambda caller: execute_shell(
+        #     f"sudo chown -cR {caller.user} /var/run/gunicorn/"
+        # ),
         "echo build gunicorn.service",
         lambda caller: resolve_template_file(
             os.path.join(
@@ -167,19 +167,49 @@ commands_list = {
             ),
             caller.context,
         ),
-        f"echo move '/config/gunicorn/gunicorn.service' & socket tp /etc/systemd/system",
+        f"echo move gunicorn.socket to /etc/systemd/system",
         lambda caller: execute_shell(
             f"sudo cp {os.path.join( caller.project_dir,'config/gunicorn/gunicorn.socket')}  /etc/systemd/system/gunicorn.socket"
         ),
+        "echo moved !",
+        "sudo systemctl daemon-reload",
+        "echo daemon reloaded",
+        "echo move gunicorn.service /etc/systemd/system",
         lambda caller: execute_shell(
             f"sudo cp {os.path.join( caller.project_dir, 'config/gunicorn/gunicorn.service')} /etc/systemd/system/gunicorn.service"
         ),
-        "echo run gunicorn",
-        "sudo systemctl start gunicorn",
-        "sudo systemctl enable gunicorn",
-        "echo chech the gunicorn status for errors, if present: abort & type: sudo journalctl -u gunicorn.socket & sudo systemctl status gunicorn.socket",
-        lambda caller: confirm_proceed("run_gunicorn"),
+
+        "echo moved !",
         "sudo systemctl daemon-reload",
+        "echo daemon reloaded",
+
+        "echo start & enable socket",
+        "sudo systemctl start gunicorn.socket",
+        "sudo systemctl enable gunicorn.socket",
+        "echo check the gunicorn status for errors",
+        "sudo systemctl status gunicorn.socket",
+        confirm_proceed(
+            "gunicorn", "Check if there is error in the gunicorn.socket."),
+        "echo the presence of the socket",
+        "file /run/gunicorn.sock",
+        confirm_proceed("gunicorn", "Is the socket exists?"),
+        "echo check gunicorn.socket logs",
+        "sudo journalctl -u gunicorn.socket",
+        confirm_proceed("gunicorn", "Is there is errors?"),
+        "echo check gunicorn.service status",
+        "sudo systemctl status gunicorn",
+        "echo it may be inactive, no problem, proceed",
+        "echo activate",
+        "curl --unix-socket /run/gunicorn.sock localhost",
+        "echo 'You should recieve a html output'",
+        "echo 'check gunicorn.service is running'",
+        "sudo systemctl status gunicorn.service",
+        confirm_proceed(
+            "gunicorn",
+            "Is the gunicorn service running ?"
+        ),
+        "sudo journalctl -u gunicorn",
+        confirm_proceed("Is there is a problem in the log"),
     ],
     # todo chowner of static files
     "nginx": [
@@ -193,9 +223,11 @@ commands_list = {
         lambda caller: resolve_template_file(
             "config/nginx/aqar.template", caller.context
         ),
+        "echo copy aqar file to /etc/nginx/sites-available/",
         lambda caller: execute_shell(
             f"sudo cp {os.path.join(caller.project_dir, 'config/nginx/aqar')} /etc/nginx/sites-available/aqar"
         ),
+        "echo copied",
         lambda caller: wait_for_user_action(
             "Go to /etc/nginx/nginx.conf & edit http { client_max_body_size 10M;  } or to another reasonable value, after this print enter"
         ),
@@ -226,7 +258,8 @@ commands_list = {
         "sudo systemctl restart nginx",
         "echo check the nginx errors above, if there is errors, correct it first",
         "sudo nginx -t",
-        lambda caller: confirm_proceed("nginx"),
+        lambda caller: confirm_proceed(
+            "nginx", " Please check the output of the nginx config check."),
         "sudo systemctl reload nginx",
     ],
     "ufw": [
