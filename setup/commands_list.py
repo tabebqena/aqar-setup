@@ -150,7 +150,7 @@ commands_list = {
         "echo 'run server'",
         "sudo ufw allow 8000",
         lambda caller:  execute_shell(
-            f"{caller.python_path} manage.py runserver 0.0.0.0:8000 &",
+            f"{caller.python_path} manage.py runserver 0.0.0.0:8000", shell=True
         ),
         confirm_proceed(
             "django", "Point your browser to IP:8000 , you should see the served website, if not check for errors"),
@@ -163,7 +163,7 @@ commands_list = {
         confirm_proceed(
             "gunicorn", "add the port 8000 to the allowed ports of the instance in the amazon console"),
         lambda caller: execute_shell(
-            f"{os.path.join( caller.project_dir,'.venv','bin', 'gunicorn')}, --bind 0.0.0.0:8000 aqar.wsgi &"
+            f"{os.path.join( caller.project_dir,'.venv','bin', 'gunicorn')}, --bind 0.0.0.0:8000 aqar.wsgi", shell=True
         ),
         confirm_proceed(
             "gunicorn", "Point your browser to IP:8000, you should see the application served"),

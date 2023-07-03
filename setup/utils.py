@@ -116,16 +116,19 @@ def load_configs(api_key=None, api_secret=None, access_token=None, key=None):
     )
 
 
-def execute_shell(command: Union[str, list]):
+def execute_shell(command: Union[str, list], shell=False):
+    _parsed = []
     if isinstance(command, str):
-        return subprocess.run(
-            command.strip().split(),
-            #   stderr=subprocess.PIPE
-        )
+        _parsed = command.strip().split()
+
     elif isinstance(command, list):
-        return subprocess.run(command)
+        _parsed = command
     else:
         raise Exception("shell command should be string or list of strings")
+    return subprocess.run(
+        _parsed,
+        shell=shell
+    )
 
 
 def create_postgres_user(caller):
