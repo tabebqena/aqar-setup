@@ -1,3 +1,5 @@
+from typing import Any, List
+import importlib
 from inspect import isfunction
 import json
 import os
@@ -8,28 +10,6 @@ import traceback
 from typing import Union, List
 import re
 from cryptography.fernet import Fernet
-
-
-def __build_rekey(key):
-    return "{0}[ ]*{1}[ ]*{2}".format("{{", key, "}}")
-
-
-def resolve_text(command: Union[str, List[str]], ctx: dict):
-    if isinstance(command, str):
-        for k, v in ctx.items():
-            built_key = __build_rekey(k)
-            command = re.sub(built_key, str(v), command)
-        return command
-    elif isinstance(command, list):
-        rv = []
-        for part in command:
-            for k, v in ctx.items():
-                part = re.sub(__build_rekey(k), str(v), part)
-            rv.append(part)
-        return rv
-    else:
-        raise RuntimeError(
-            "{0} is not string nor list of strings".format(command))
 
 
 def resolve_template_file(input_path, ctx: dict):
@@ -192,29 +172,6 @@ def make_dir_if_not_exists(path):
     execute_shell(f"sudo mkdir -pv {path}")
 
 
-class BaseCallable:
-    def __call__(self, *args, **kwargs):
-        ...
-
-
-class confirm_proceed(BaseCallable):
-    def __init__(self, index, message="") -> None:
-        self.message = message
-        self.__call__(index, self.message)
-
-    def __call__(self, index, message=""):
-        if message:
-            print(message)
-        p = input("Proceed? \ntype 'Y' or 'y' to proceed, any other key to abort: ")
-        if p.lower() != "y":
-            print(
-                f"next time, you can type up {index} to start from this step")
-            sys.exit("aborted by user\n")
-
-    def __repr__(self) -> str:
-        return f"<Confirm proceed of {self.message}>"
-
-
 def user_choice(command, caller, message=""):
     if message:
         print(message)
@@ -234,6 +191,28 @@ def wait_for_user_action(message):
     input(
         "\nWait for your action, After finishing the following instructions, press ENTER"
     )
+
+
+def __build_rekey(key):
+    return "{0}[ ]*{1}[ ]*{2}".format("{{", key, "}}")
+
+
+def resolve_text(command: Union[str, List[str]], ctx: dict):
+    if isinstance(command, str):
+        for k, v in ctx.items():
+            built_key = __build_rekey(k)
+            command = re.sub(built_key, str(v), command)
+        return command
+    elif isinstance(command, list):
+        rv = []
+        for part in command:
+            for k, v in ctx.items():
+                part = re.sub(__build_rekey(k), str(v), part)
+            rv.append(part)
+        return rv
+    else:
+        raise RuntimeError(
+            "{0} is not string nor list of strings".format(command))
 
 
 def execute_command(cmd, caller, stop_on_error=False):
@@ -264,12 +243,76 @@ def execute_command(cmd, caller, stop_on_error=False):
             if errors:
                 for error in errors:
                     print(traceback.format_exception(error))
-                confirm_proceed("", "Procees after this errors?")
+                confirm_proceed("", "Procees after this errors?")()
 
         elif callable(cmd):
-            if isinstance(cmd, BaseCallable):
-                return cmd
-            else:
-                return cmd(caller=caller)
+            return cmd(caller=caller)
     except Exception as e:
         raise e
+
+
+class Command:
+    def __init__(self, commands, stop_in_error=True, conditions=(), *args, **kwargs) -> None:
+        if isinstance(commands, (list, tuple)):
+            self.commands = commands
+        else:
+            self.commands = (commands,)
+        self.stop_in_error = stop_in_error
+        self.conditions = conditions
+        self.args = args
+        self.kwargs = kwargs
+
+    def resolve(self, command, caller):
+        return command
+
+    def __call__(self, caller=None):
+        if self.conditions:
+            matched = True
+            for index, condition in enumerate(self.conditions):
+                _matched = condition(caller)
+                print(index, condition, _matched)
+                if not _matched:
+                    print(f"Condition not matched on {index}: {condition}")
+                matched = matched and _matched
+            if not matched:
+                print("skip command as not all conditions are matched")
+                return
+        for command in self.commands:
+            command = self.resolve(command, caller)
+            try:
+                execute_command(command, caller, self.stop_in_error)
+
+            except Exception as e:
+                raise Exception(f"Error in {command}") from e
+
+
+class ShellCommand(Command):
+    def resolve(self, command, caller):
+        rv = resolve_text(command, caller.context)
+        print("resolved to:", rv)
+        return rv
+
+
+class confirm_proceed(Command):
+    def __init__(self, index, message="") -> None:
+        commands = (lambda caller: self.__call__())
+        stop_in_error = False
+        conditions = []
+        super().__init__(commands, stop_in_error, conditions)
+
+        self.message = message
+        self.index = index
+
+    def __call__(self,):
+        index = self.index
+        message = self.message
+        if message:
+            print(message)
+        p = input("Proceed? \ntype 'Y' or 'y' to proceed, any other key to abort: ")
+        if p.lower() != "y":
+            print(
+                f"next time, you can type up {index} to start from this step")
+            sys.exit("aborted by user\n")
+
+    def __repr__(self) -> str:
+        return f"<Confirm proceed of {self.message}>"

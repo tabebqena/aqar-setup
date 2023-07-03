@@ -1,5 +1,5 @@
 import os
-from .base_classes import Command,  ShellCommand
+from .utils import Command,  ShellCommand
 
 from setup.utils import (
     add_local_bin_path,
@@ -277,7 +277,7 @@ commands_list = {
         "sudo systemctl restart nginx",
         "echo check the nginx errors above, if there is errors, correct it first",
         "sudo nginx -t",
-        lambda caller: confirm_proceed(
+        confirm_proceed(
             "nginx", " Please check the output of the nginx config check."),
         "sudo systemctl reload nginx",
     ],
@@ -297,10 +297,10 @@ commands_list = {
         ),
         "sudo systemctl restart redis.service",
         "echo check redis status: sudo systemctl status redis",
-        lambda caller: confirm_proceed("redis"),
+        confirm_proceed("redis"),
         "echo check redis port: sudo netstat -lnp | grep redis",
         "sudo systemctl restart redis.service",
-        lambda caller: confirm_proceed(
+        confirm_proceed(
             "redis", "Check if the redis port is 6379"),
     ],
     "daphne": [
@@ -318,7 +318,7 @@ commands_list = {
         "sudo systemctl daemon-reload",
         "sudo systemctl start daphne.service",
         # "sudo systemctl status daphne.service",
-        lambda caller: confirm_proceed(
+        confirm_proceed(
             "daphne", "Check the dapne service status"),
         "sudo systemctl daemon-reload",
         "sudo systemctl start daphne.service",
