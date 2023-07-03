@@ -109,6 +109,8 @@ commands_list = {
         ),
     ],
     "django": [
+        lambda caller: make_dir_if_not_exists(
+            f"{os.path.join(caller.home_dir), 'logs'}"),
         lambda caller: caller.configs,
         # execute_shell(f"mkdir -p {caller.project_dir}"),
         lambda caller: make_dir_if_not_exists(caller.project_dir),
@@ -148,7 +150,7 @@ commands_list = {
         "echo 'run server'",
         "sudo ufw allow 8000",
         lambda caller:  execute_shell(
-            f"{caller.python_path} manage.py runserver 0.0.0.0:8000",
+            f"{caller.python_path} manage.py runserver 0.0.0.0:8000 &",
         ),
         confirm_proceed(
             "django", "Point your browser to IP:8000 , you should see the served website, if not check for errors"),
