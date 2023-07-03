@@ -109,11 +109,11 @@ commands_list = {
         ),
     ],
     "django": [
-        lambda caller: make_dir_if_not_exists(
-            f"{os.path.join(caller.home_dir), 'logs'}"),
         lambda caller: caller.configs,
         # execute_shell(f"mkdir -p {caller.project_dir}"),
         lambda caller: make_dir_if_not_exists(caller.project_dir),
+        lambda caller: make_dir_if_not_exists("/var/log/django/log"),
+        lambda caller: execute_shell("sudo chmod 755 /var/log/django/log"),
         lambda caller: os.chdir(caller.project_dir),
         lambda caller: execute_shell(
             f"{caller.python_path} manage.py makemigrations",
@@ -148,39 +148,45 @@ commands_list = {
             "if you enter y or Y, the sites fixture will be loaded, This may change your sites table",
         ),
         "echo 'run server'",
-        "sudo ufw allow 8000",
-        lambda caller:  execute_shell(
-            f"{caller.python_path} manage.py runserver 0.0.0.0:8000", shell=True
-        ),
         confirm_proceed(
-            "django", "Point your browser to IP:8000 , you should see the served website, if not check for errors"),
-        "sudo ufw delete allow 8000",
+            "django", """
+                > sudo ufw allow 8000
+                add the port 8000 to the allowed ports of the instance in the amazon console.
+                > manage.py runserver 0.0.0.0:8000
+                Point your browser to IP:8000 , you should see the served website, 
+                if not check for errors
+                > sudo ufw delete allow 8000
+                > Remove 8000 from allowed ports of the instance in the amazon console.
+        """
+        ),
 
     ],
     "gunicorn": [
-        "echo 'before start, check the gunicorn ability to serve the application'",
-        "sudo ufw allow 8000",
         confirm_proceed(
-            "gunicorn", "add the port 8000 to the allowed ports of the instance in the amazon console"),
-        lambda caller: execute_shell(
-            f"{os.path.join( caller.project_dir,'.venv','bin', 'gunicorn')}, --bind 0.0.0.0:8000 aqar.wsgi", shell=True
+            "gunicorn",
+            """
+            before start, check the gunicorn ability to serve the application.
+            > sudo ufw allow 8000
+            add the port 8000 to the allowed ports of the instance in the amazon console
+            gunicorn  --bind 0.0.0.0:8000 aqar.wsgi
+            Point your browser to IP:8000, you should see the application served.
+            sudo ufw delete allow 8000
+            > Remove 8000 from allowed ports of the instance in the amazon console.
+            """
         ),
-        confirm_proceed(
-            "gunicorn", "Point your browser to IP:8000, you should see the application served"),
-        "sudo ufw delete allow 8000",
         # gunicorn
         "echo create gunicorn log & change owner",
         lambda caller: caller.configs,
         lambda caller: execute_shell(f"mkdir -p {caller.project_dir}"),
         lambda caller: os.chdir(caller.project_dir),
-        # lambda caller: make_dir_if_not_exists("/var/log/gunicorn/"),
-        # lambda caller: make_dir_if_not_exists("/var/run/gunicorn/"),
-        # lambda caller: execute_shell(
-        #     f"sudo chown -cR {caller.user} /var/log/gunicorn/"
-        # ),
-        # lambda caller: execute_shell(
-        #     f"sudo chown -cR {caller.user} /var/run/gunicorn/"
-        # ),
+        lambda caller: make_dir_if_not_exists("/var/log/gunicorn/"),
+        lambda caller: make_dir_if_not_exists("/var/run/gunicorn/"),
+        lambda caller: execute_shell(
+            f"sudo chown -cR {caller.user} /var/log/gunicorn/"
+        ),
+        lambda caller: execute_shell(
+            f"sudo chown -cR {caller.user} /var/run/gunicorn/"
+        ),
         "echo build gunicorn.service",
         lambda caller: resolve_template_file(
             os.path.join(
@@ -214,31 +220,26 @@ commands_list = {
         "echo the presence of the socket",
         "file /run/gunicorn.sock",
         confirm_proceed("gunicorn", "Is the socket exists?"),
-        "echo check gunicorn.socket logs",
-        "sudo journalctl -u gunicorn.socket",
-        confirm_proceed("gunicorn", "Is there is errors?"),
+        confirm_proceed(
+            "gunicorn", "Is there is errors in `sudo journalctl -u gunicorn.socket`?"),
         "echo check gunicorn.service status",
         "sudo systemctl status gunicorn",
         "echo it may be inactive, no problem, proceed",
         "echo activate",
-        "curl --unix-socket /run/gunicorn.sock localhost",
-        "echo 'You should recieve a html output'",
         "echo 'check gunicorn.service is running'",
         "sudo systemctl status gunicorn.service",
         confirm_proceed(
             "gunicorn",
             "Is the gunicorn service running ?"
         ),
-        "sudo journalctl -u gunicorn",
-        confirm_proceed("Is there is a problem in the log"),
+        confirm_proceed(
+            "Is there is a problem in the log `sudo journalctl -u gunicorn`"),
     ],
     # todo chowner of static files
     "nginx": [
         "echo make nginx dir",
         lambda caller: caller.configs,
         lambda caller: make_dir_if_not_exists(caller.project_dir),
-        lambda caller: make_dir_if_not_exists(
-            os.path.join(caller.home_dir, "logs")),
         lambda caller: os.chdir(caller.project_dir),
         lambda caller: make_dir_if_not_exists("/etc/nginx/sites-available/"),
         lambda caller: resolve_template_file(
@@ -253,7 +254,7 @@ commands_list = {
             "Go to /etc/nginx/nginx.conf & edit http { client_max_body_size 10M;  } or to another reasonable value, after this print enter"
         ),
         Command(
-            ["sudo rm /etc/nginx/sites-enabled/aqar"],
+            ["sudo rm -f /etc/nginx/sites-enabled/aqar"],
             [lambda caller: os.path.exists("/etc/nginx/sites-enabled/aqar")]
         ),
         ShellCommand(
@@ -263,7 +264,7 @@ commands_list = {
         # backup default site
         ShellCommand(
             ["sudo mv /etc/nginx/sites-available/default /etc/nginx/sites-available/__default",
-             "sudo rm /etc/nginx/sites-enabled/default",],
+             "sudo rm -f /etc/nginx/sites-enabled/default",],
             conditions=(
                 lambda caller: os.path.exists(
                     "/etc/nginx/sites-available/default"),
