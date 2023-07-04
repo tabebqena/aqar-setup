@@ -112,8 +112,6 @@ commands_list = {
         lambda caller: caller.configs,
         # execute_shell(f"mkdir -p {caller.project_dir}"),
         lambda caller: make_dir_if_not_exists(caller.project_dir),
-        lambda caller: make_dir_if_not_exists("/var/log/django/log"),
-        lambda caller: execute_shell("sudo chmod 755 /var/log/django/log"),
         lambda caller: os.chdir(caller.project_dir),
         lambda caller: execute_shell(
             f"{caller.python_path} manage.py makemigrations",
