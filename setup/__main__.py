@@ -103,14 +103,14 @@ def parse_args():
                 k, v = line.strip().split("=", 1)
                 conf[k] = v
         if not args.access:
-            args.access = conf["access"]
+            args.access = conf.get("access", None)
         if not args.key:
-            args.key = conf["key"]
+            args.key = conf.get("key", None)
         if not args.api_secret:
-            args.api_secret = conf["api_secret"]
+            args.api_secret = conf.get("api_secret", None)
 
         if not args.api_key:
-            args.api_key = conf["api_key"]
+            args.api_key = conf.get("api_key", None)
     return args
 
 
