@@ -110,6 +110,10 @@ commands_list = {
     ],
     "django": [
         lambda caller: caller.configs,
+        lambda caller: make_dir_if_not_exists(
+            os.path.join(caller.proj_dir, "logs")),
+        lambda caller:execute_shell(
+            f"sudo chmod a+rw {os.path.join(caller.project_dir,'logs')}"),
         # execute_shell(f"mkdir -p {caller.project_dir}"),
         lambda caller: make_dir_if_not_exists(caller.project_dir),
         lambda caller: os.chdir(caller.project_dir),
