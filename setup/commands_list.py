@@ -312,6 +312,9 @@ commands_list = {
         lambda caller: caller.configs,
         lambda caller: execute_shell(f"mkdir -p {caller.project_dir}"),
         lambda caller: os.chdir(caller.project_dir),
+        lambda caller: execute_shell(
+            f"sudo cp {os.path.join( caller.project_dir,'config/daphne/daphne.socket')}  /etc/systemd/system/daphne.socket"
+        ),
         lambda caller: resolve_template_file(
             os.path.join(caller.project_dir,
                          "config/daphne/daphne.service.template"),
@@ -321,14 +324,11 @@ commands_list = {
             f"sudo cp {os.path.join(caller.project_dir,'config/daphne/daphne.service')} /etc/systemd/system/daphne.service"
         ),
         "sudo systemctl daemon-reload",
-        "sudo systemctl start daphne.service",
+        "sudo systemctl start daphne.socket",
+        "sudo systemctl enable daphne.socket",
         # "sudo systemctl status daphne.service",
         confirm_proceed(
-            "daphne", "Check the dapne service status"),
-        "sudo systemctl daemon-reload",
-        "sudo systemctl start daphne.service",
-        # Make it run on reboot
-        "sudo systemctl enable daphne.service",
+            "daphne", "Check the daphne service status"),
     ],
     "autoremove": [
         "echo autoremove && sudo apt autoremove -y",
