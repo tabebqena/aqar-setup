@@ -286,6 +286,8 @@ commands_list = {
         confirm_proceed(
             "nginx", " Please check the output of the nginx config check."),
         "sudo systemctl reload nginx",
+        lambda caller: Command(
+            f"python3 {os.path.join(caller.home_dir, 'config/nginx/test_deployment.py')} ")
     ],
     "ufw": [
         # Allow connections to the server
