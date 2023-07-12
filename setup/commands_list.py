@@ -40,7 +40,7 @@ commands_list = {
             [
                 f"sudo apt-get install -y {p}"
                 for p in (
-                    "zlib1g-dev build-essential libreadline-gplv2-dev libncursesw5-dev libssl-dev libsqlite3-dev tk-dev libgdbm-dev libc6-dev libbz2-dev  python-setuptools python-pip python-smbus openssl libffi-dev python3-venv zip python3-distutils  software-properties-common redis postgresql postgresql-contrib libssl-dev curl python3-dev libpq-dev nginx nginx-common nginx-core git python-is-python3 binutils libproj-dev gdal-bin postgresql postgresql-contrib postgresql-client redis-server supervisor postgis postgresql-14-postgis-scripts postgresql-client-common"
+                    "zlib1g-dev build-essential libreadline-gplv2-dev libncursesw5-dev libssl-dev libsqlite3-dev tk-dev libgdbm-dev libc6-dev libbz2-dev  python-setuptools python-pip python-smbus openssl libffi-dev python3-venv zip python3-distutils  software-properties-common redis postgresql postgresql-contrib libssl-dev curl python3-dev libpq-dev nginx nginx-common nginx-core git python-is-python3 binutils libproj-dev gdal-bin postgresql postgresql-contrib postgresql-client redis-server supervisor postgis postgresql-14-postgis-scripts postgresql-client-common certbot python3-certbot-nginx"
                 ).split()
             ],
             stop_in_error=False
@@ -279,6 +279,7 @@ commands_list = {
                 f"sudo chmod 755 {os.path.join(caller.project_dir, 'media')}",
             ]
         ),
+        "sudo certbot --nginx -d www.aqar-alsaudia.com -d aqar-alsaudia.com -d api.aqar-alsaudia.com -d aqar-alsaudia.co -d www.aqar-alsaudia.co -d aqar-alsaudia.info -d www.aqar-alsaudia.info -d aqar-alsaudia.net -d www.aqar-alsaudia.net -d aqar-alsaudia.org -d www.aqar-alsaudia.org -d aqar-alsaudia.club -d www.aqar-alsaudia.club",
         "sudo systemctl restart nginx",
         "echo check the nginx errors above, if there is errors, correct it first",
         "sudo nginx -t",
