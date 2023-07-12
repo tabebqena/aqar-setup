@@ -65,6 +65,9 @@ commands_list = {
     "configs": [
         "pip install dropbox python-dotenv",
         lambda caller: caller.load_configs(),
+        lambda caller: ShellCommand(
+            [f"{caller.python_path} {os.path.join(caller.project_dir, 'config/encrypt_secrets.py')} -d "]
+        )
     ],
     "postgres": [
         "echo create db_user",
