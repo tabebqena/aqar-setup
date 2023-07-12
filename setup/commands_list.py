@@ -279,7 +279,7 @@ commands_list = {
                 f"sudo chmod 755 {os.path.join(caller.project_dir, 'media')}",
             ]
         ),
-        "sudo certbot --nginx -d www.aqar-alsaudia.com -d aqar-alsaudia.com -d api.aqar-alsaudia.com -d aqar-alsaudia.co -d www.aqar-alsaudia.co -d aqar-alsaudia.info -d www.aqar-alsaudia.info -d aqar-alsaudia.net -d www.aqar-alsaudia.net -d aqar-alsaudia.org -d www.aqar-alsaudia.org -d aqar-alsaudia.club -d www.aqar-alsaudia.club",
+        "sudo certbot --nginx -d www.aqar-alsaudia.com -d aqar-alsaudia.com -d aqar-alsaudia.co -d www.aqar-alsaudia.co -d aqar-alsaudia.info -d www.aqar-alsaudia.info -d aqar-alsaudia.net -d www.aqar-alsaudia.net -d aqar-alsaudia.org -d www.aqar-alsaudia.org -d aqar-alsaudia.club -d www.aqar-alsaudia.club",
         "sudo systemctl restart nginx",
         "echo check the nginx errors above, if there is errors, correct it first",
         "sudo nginx -t",
